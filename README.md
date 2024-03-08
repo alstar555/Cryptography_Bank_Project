@@ -20,8 +20,9 @@ Bank:
 * get_public_key()
 
 Encryption Methods:
-* RSA
-* AES
+* RSA asymmetric
+* AES symmetric
+* SHA-2 hashing
 
 Resources:
 https://www.cs.cornell.edu/courses/cs513/2000SP/proj.02.bankATM.html

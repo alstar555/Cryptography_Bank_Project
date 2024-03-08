@@ -1,6 +1,7 @@
 ## Cryptography Final Bank Project
 
-Outline:
+### Outline:
+
 Customer:
 * has a private key corresponding to Bank's private key
 * customer login using bank card and password

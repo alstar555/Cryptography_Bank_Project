@@ -1,91 +1,104 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <cstring>
 
 using namespace std;
 
 
-// ATM Client Instance
-class ATM {
+// Bank Server Instance
+class Bank {
 private:
 
-	string public_key = "987654321";
+    int port = 1500;
+    string private_key = "123456789";
 
-	string encrypt_msg(const string& msg) {
-		string encrypted_msg = msg + public_key;
-		return encrypted_msg;
-	}
-
-	string hash_msg(const string& msg) {
-		string hashed_msg = msg + "_temp_hashed" ;
-		return hashed_msg;
-	}
+    string decrypt_msg(const string& msg) {
+        string decrypted_msg = msg + private_key;
+        return decrypted_msg;
+    }
 
    
 
 public:
-    ATM() {
+    Bank() {
        
     }
 
-    int login(const string& bank_card, const string& pass) {
-    	sendBankMsg(hash_msg(bank_card));
-    	sendBankMsg(hash_msg(pass));
-    	return 1;
-      
+    void run_server() {
+    // Create socket
+    int server = socket(AF_INET, SOCK_STREAM, 0);
+    if (server < 0) {
+        cerr << "Error creating socket.\n";
+        exit(1);
     }
 
-    int sendBankMsg (const string& msg) {
-    	return 1;
-      
+    // Address setup
+    struct sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(port);
+
+    // Bind socket
+    if (bind(server, (struct sockaddr *)&address, sizeof(address)) == -1) {
+        cerr << "Error binding.\n";
+        exit(1);
     }
 
+    // Listen
+    listen(server, 1);
+    cout << "Server is listening...\n";
 
-    void displayMenu() {
-        std::cout << "ATM" << std::endl;
-        std::cout << "1. Withdraw" << std::endl;
-        std::cout << "2. Transfer" << std::endl;
-        std::cout << "3. Exit" << std::endl;
+    // Accept connection
+    int client;
+    socklen_t size = sizeof(address);
+    client = accept(server, (struct sockaddr *)&address, &size);
+    if (client < 0) {
+        cerr << "Error accepting connection.\n";
+        exit(1);
     }
+
+    cout << "Client connected.\n";
+
+    // Send message to client
+    char buffer[1024] = "Message from Bank Server.\n";
+    send(client, buffer, strlen(buffer), 0);
+
+    // Receive messages from client
+    int connection = 1;
+    while(connection){
+        memset(buffer, 0, sizeof(buffer));
+        int bytes_recv = recv(client, buffer, sizeof(buffer), 0);
+        cout << "Client: " << buffer << endl;
+        if (bytes_recv <= 0) {
+            cout << "Client disconnected.\n";
+            connection = 0;
+            break;
+        }
+    }
+
+    // Close socket
+    close(server);
+}
+
+
+  
 
     void run() {
 
-    	std::string bankCardNumber, pin;
-        std::cout << "Enter your bank card number: ";
-        std::cin >> bankCardNumber;
-        std::cout << "Enter your PIN: ";
-        std::cin >> pin;
-
-        int authenticated = login(bankCardNumber, pin);
-
-        while (authenticated) {
-            displayMenu();
-            std::cout << "Enter your choice: ";
-            int choice;
-            std::cin >> choice;
-            switch (choice) {
-                case 1: {
-                    
-                    break;
-                }
-                case 2:
-
-                    break;
-                case 3:
-                    std::cout << "Exiting ATM." << std::endl;
-                    return;
-                default:
-                    std::cout << "Invalid choice, please try again." << std::endl;
-            }
-        }
+        run_server();
+        
     }
 };
 
 
 int main() {
   
-    ATM atm;
-    atm.run();
+    Bank bank;
+    bank.run();
 
   
     return 0;

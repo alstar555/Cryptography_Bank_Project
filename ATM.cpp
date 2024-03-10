@@ -5,8 +5,22 @@
 using namespace std;
 
 
+// ATM Client Instance
 class ATM {
 private:
+
+	string public_key = "987654321";
+
+	string encrypt_msg(const string& msg) {
+		string encrypted_msg = msg + public_key;
+		return encrypted_msg;
+	}
+
+	string hash_msg(const string& msg) {
+		string hashed_msg = msg + "_temp_hashed" ;
+		return hashed_msg;
+	}
+
    
 
 public:
@@ -15,6 +29,13 @@ public:
     }
 
     int login(const string& bank_card, const string& pass) {
+    	sendBankMsg(hash_msg(bank_card));
+    	sendBankMsg(hash_msg(pass));
+    	return 1;
+      
+    }
+
+    int sendBankMsg (const string& msg) {
     	return 1;
       
     }

@@ -26,7 +26,7 @@ private:
     }
 
     string hash_msg(const string& msg) {
-        string hashed_msg = msg + "_temp_hashed" ;
+        string hashed_msg = msg + "_temp_hashed\n" ;
         return hashed_msg;
     }
 
@@ -78,13 +78,18 @@ public:
     int login(const string& bank_card, const string& pass) {
         sendBankMsg(hash_msg(bank_card));
         sendBankMsg(hash_msg(pass));
-        return 1;
+        return 0;
       
     }
 
     int sendBankMsg (const string& msg) {
+        const char* buffer = msg.c_str();
+        int bytes_sent = send(client, buffer, strlen(buffer), 0);
+        if (bytes_sent == -1) {
+            cerr << "Error sending message.\n";
+            return -1; 
+        }
         return 1;
-      
     }
 
 
@@ -98,14 +103,25 @@ public:
     void run() {
 
         run_client();
+        
 
         std::string bankCardNumber, pin;
-        std::cout << "Enter your bank card number: ";
-        std::cin >> bankCardNumber;
-        std::cout << "Enter your PIN: ";
-        std::cin >> pin;
+        int authenticated=0;
+        while(authenticated==0){
+            std::cout << "\nEnter your bank card number: ";
+            std::cin >> bankCardNumber;
+            std::cout << "Enter your PIN: ";
+            std::cin >> pin;
+            authenticated = login(bankCardNumber, pin);
+            if(authenticated){
+                cout << "Logged In.\n";
+                break;
+            }
+            cerr << "Incorrect Credentials, Try Again.\n";
 
-        int authenticated = login(bankCardNumber, pin);
+        }
+
+        cout << "Logged In.\n";
 
         while (authenticated) {
             displayMenu();

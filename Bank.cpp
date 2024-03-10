@@ -27,8 +27,7 @@ public:
     Bank() {
        
     }
-
-    void run_server() {
+void run_server() {
     // Create socket
     int server = socket(AF_INET, SOCK_STREAM, 0);
     if (server < 0) {
@@ -53,36 +52,38 @@ public:
     cout << "Server is listening...\n";
 
     // Accept connection
-    int client;
-    socklen_t size = sizeof(address);
-    client = accept(server, (struct sockaddr *)&address, &size);
-    if (client < 0) {
-        cerr << "Error accepting connection.\n";
-        exit(1);
-    }
-
-    cout << "Client connected.\n";
-
-    // Send message to client
-    char buffer[1024] = "Message from Bank Server.\n";
-    send(client, buffer, strlen(buffer), 0);
-
-    // Receive messages from client
-    int connection = 1;
-    while(connection){
-        memset(buffer, 0, sizeof(buffer));
-        int bytes_recv = recv(client, buffer, sizeof(buffer), 0);
-        cout << "Client: " << buffer << endl;
-        if (bytes_recv <= 0) {
-            cout << "Client disconnected.\n";
-            connection = 0;
-            break;
+    while (true) {
+        int client;
+        socklen_t size = sizeof(address);
+        client = accept(server, (struct sockaddr *)&address, &size);
+        if (client < 0) {
+            cerr << "Error accepting connection.\n";
+            continue;
         }
+
+        cout << "Client connected.\n";
+
+        // Send message to client
+        char buffer[1024] = "Message from Bank Server.\n";
+        send(client, buffer, strlen(buffer), 0);
+
+        // Receive messages from client
+        while (true) {
+            memset(buffer, 0, sizeof(buffer));
+            int bytes_recv = recv(client, buffer, sizeof(buffer), 0);
+            if (bytes_recv <= 0) {
+                cout << "Client disconnected.\n";
+                break;
+            }
+            cout << "Client: " << buffer << endl;
+        }
+
+        // Close client socket
+        close(client);
     }
 
-    // Close socket
-    close(server);
 }
+
 
 
   

@@ -20,13 +20,13 @@ private:
 
     string public_key = "987654321";
 
-    string encrypt_msg(const string& msg) {
-        string encrypted_msg = msg + public_key;
+    string encrypt(const string& msg) {
+        string encrypted_msg = msg;
         return encrypted_msg;
     }
 
     string hash_msg(const string& msg) {
-        string hashed_msg = msg + "_temp_hashed\n" ;
+        string hashed_msg = msg;
         return hashed_msg;
     }
 
@@ -53,17 +53,59 @@ private:
     cout << "Connected to server.\n";
 
     // Receive message from server
+    recvBankMsg();
+
+    // Send message to server
+    sendBankMsg("Message from ATM Client.\n");
+
+}
+
+int login(const string& bank_card, const string& pass) {
+    string message = "LOGIN " + hash_msg(bank_card) + " " + hash_msg(pass);
+    sendBankMsg(message.c_str());
+    string response = recvBankMsg();
+    if (response == "APPROVED") {
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
+int deposit(const string& amount) {
+    string message = "DEPOSIT " + amount;
+    sendBankMsg(message.c_str());
+    return 0;
+}
+
+int withdraw(const string& amount) {
+    sendBankMsg("WITHDRAW "+amount);
+    return 0;
+}
+
+
+int balance() {
+    sendBankMsg("BALANCE");
+    return 0;
+}
+
+int sendBankMsg (const string& msg) {
+    std::string encryptedMsg = encrypt(msg);
+    int bytes_sent = send(client, encryptedMsg.c_str(), encryptedMsg.length(), 0);
+
+    if (bytes_sent == -1) {
+        std::cerr << "Error sending message.\n";
+        return -1;
+    }
+    return 1;
+}
+
+string recvBankMsg () {
     char buffer[1024] = {0};
     recv(client, buffer, sizeof(buffer), 0);
     cout << "Server: " << buffer << endl;
-
-    // Send message to server
-    strcpy(buffer, "Message from ATM Client.\n");
-    send(client, buffer, strlen(buffer), 0);
-
-    // Close socket
-    // close(client);
+    return string(buffer);
 }
+
 
    
 
@@ -75,29 +117,15 @@ public:
         close(client);
     }
 
-    int login(const string& bank_card, const string& pass) {
-        sendBankMsg(hash_msg(bank_card));
-        sendBankMsg(hash_msg(pass));
-        return 0;
-      
-    }
-
-    int sendBankMsg (const string& msg) {
-        const char* buffer = msg.c_str();
-        int bytes_sent = send(client, buffer, strlen(buffer), 0);
-        if (bytes_sent == -1) {
-            cerr << "Error sending message.\n";
-            return -1; 
-        }
-        return 1;
-    }
+    
 
 
     void displayMenu() {
         std::cout << "ATM" << std::endl;
-        std::cout << "1. Withdraw" << std::endl;
-        std::cout << "2. Transfer" << std::endl;
-        std::cout << "3. Exit" << std::endl;
+        std::cout << "1. Deposit" << std::endl;
+        std::cout << "2. Withdraw Money" << std::endl;
+        std::cout << "3. Check Balance" << std::endl;
+        std::cout << "4. Exit" << std::endl;
     }
 
     void run() {
@@ -123,6 +151,7 @@ public:
 
         cout << "Logged In.\n";
 
+        string amount;
         while (authenticated) {
             displayMenu();
             std::cout << "Enter your choice: ";
@@ -130,17 +159,26 @@ public:
             std::cin >> choice;
             switch (choice) {
                 case 1: {
-                    
+                    std::cout << "\nEnter amount to deposit: $";
+                    std::cin >> amount;
+                    cout << endl;
+                    deposit(amount);
                     break;
                 }
                 case 2:
-
+                    std::cout << "\nEnter amount to withdraw: $";
+                    std::cin >> amount;
+                    cout << endl;
+                    withdraw(amount);
                     break;
                 case 3:
-                    std::cout << "Exiting ATM." << std::endl;
+                    balance();
+                    break;
+                case 4:
+                    std::cout << "Exiting ATM.\n" << std::endl;
                     return;
                 default:
-                    std::cout << "Invalid choice, please try again." << std::endl;
+                    std::cout << "Invalid choice, please try again.\n" << std::endl;
             }
         }
     }

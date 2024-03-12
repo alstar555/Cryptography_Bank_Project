@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <cstring>
+#include "SHA-1.cpp"
 
 
 using namespace std;
@@ -26,7 +27,8 @@ private:
     }
 
     string hash_msg(const string& msg) {
-        string hashed_msg = msg;
+        SHA1 sha1;
+        string hashed_msg = sha1(msg);
         return hashed_msg;
     }
 

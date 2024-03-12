@@ -7,6 +7,7 @@
 #include <cstring>
 #include <sstream>
 #include <map>
+#include "SHA-1.cpp"
 
 
 using namespace std;
@@ -15,8 +16,8 @@ using namespace std;
 // Bank Server Instance
 class Bank {
 private:
-    map<string, string> credentials_database;
-    map<string, int> bank_account_database;
+    map<string, string> credentials_database; //stores bank card and pin
+    map<string, int> bank_account_database; //stores account balance of users
 
     int server;
     int client;
@@ -61,116 +62,119 @@ private:
         return bank_account_database[bank_card] ;
     }
 
-
-
-void run_server() {
-    // Create socket
-    server = socket(AF_INET, SOCK_STREAM, 0);
-    if (server < 0) {
-        cerr << "Error creating socket.\n";
-        exit(1);
+    string hash_msg(const string& msg) {
+        SHA1 sha1;
+        string hashed_msg = sha1(msg);
+        return hashed_msg;
     }
 
-    // Address setup
-    struct sockaddr_in address;
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
-
-    // Bind socket
-    if (bind(server, (struct sockaddr *)&address, sizeof(address)) == -1) {
-        cerr << "Error binding.\n";
-        exit(1);
-    }
-
-    // Listen
-    listen(server, 1);
-    cout << "Server is listening...\n";
-
-    // Accept connection
-    string bank_card;
-    while (true) {
-        socklen_t size = sizeof(address);
-        client = accept(server, (struct sockaddr *)&address, &size);
-        if (client < 0) {
-            cerr << "Error accepting connection.\n";
-            continue;
+    void run_server() {
+        // Create socket
+        server = socket(AF_INET, SOCK_STREAM, 0);
+        if (server < 0) {
+            cerr << "Error creating socket.\n";
+            exit(1);
         }
 
-        cout << "Client connected.\n";
+        // Address setup
+        struct sockaddr_in address;
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = INADDR_ANY;
+        address.sin_port = htons(port);
 
-        // Send message to client
-        char buffer[1024] = "Message from Bank Server.\n";
-        send(client, buffer, strlen(buffer), 0);
+        // Bind socket
+        if (bind(server, (struct sockaddr *)&address, sizeof(address)) == -1) {
+            cerr << "Error binding.\n";
+            exit(1);
+        }
 
-        // Receive messages from client
+        // Listen
+        listen(server, 1);
+        cout << "Server is listening...\n";
+
+        // Accept connection
+        string bank_card;
         while (true) {
-            // Read the length of the incoming message
-            string buffer_str = recvATMMsg();
-            
-            // Check if the client disconnected
-            if (buffer_str == "") {
-                cout << "Client disconnected.\n";
-                break;
+            socklen_t size = sizeof(address);
+            client = accept(server, (struct sockaddr *)&address, &size);
+            if (client < 0) {
+                cerr << "Error accepting connection.\n";
+                continue;
             }
 
-            // Decrypt request
-            string request = decrypt(buffer_str);
+            cout << "Client connected.\n";
 
-            cout << "Client: " << request << endl;
+            // Send message to client
+            char buffer[1024] = "Message from Bank Server.\n";
+            send(client, buffer, strlen(buffer), 0);
 
-            // Process Client requests
-            std::istringstream iss(request);
-            std::vector<std::string> tokens;
-            std::string token;
-            while (std::getline(iss, token, ' ')) {
-                tokens.push_back(token);
-            }
-            const char* response;
-            int authenticated = 0;
-            if (tokens[0] == "LOGIN") {
-                bank_card = tokens[1];
-                string pass = tokens[2]; 
-                cout << "bank_card: " << bank_card << endl;
-                cout << "pass: " << pass << endl;
-                authenticated = validate_login(bank_card, pass);
-                if(authenticated){
-                    response = "APPROVED";
-                    cout << "Login Successful.\n";
-                }else{
-                    cout << "Login not Approved.\n";
-                    response = "BAD LOGIN";
+            // Receive messages from client
+            while (true) {
+                // Read the length of the incoming message
+                string buffer_str = recvATMMsg();
+                
+                // Check if the client disconnected
+                if (buffer_str == "") {
+                    cout << "Client disconnected.\n";
+                    break;
                 }
-                send(client, response, strlen(response), 0);
+
+                // Decrypt request
+                string request = decrypt(buffer_str);
+
+                cout << "Client: " << request << endl;
+
+                // Process Client requests
+                std::istringstream iss(request);
+                std::vector<std::string> tokens;
+                std::string token;
+                while (std::getline(iss, token, ' ')) {
+                    tokens.push_back(token);
+                }
+                const char* response;
+                int authenticated = 0;
+                if (tokens[0] == "LOGIN") {
+                    bank_card = tokens[1];
+                    string pass = tokens[2]; 
+                    cout << "bank_card: " << bank_card << endl;
+                    cout << "pass: " << pass << endl;
+                    authenticated = validate_login(bank_card, pass);
+                    if(authenticated){
+                        response = "APPROVED";
+                        cout << "Login Successful.\n";
+                    }else{
+                        cout << "Login not Approved.\n";
+                        response = "BAD LOGIN";
+                    }
+                    send(client, response, strlen(response), 0);
+                }
+                else if (tokens[0] == "DEPOSIT") {
+                    int amount = stoi(tokens[1]);
+                    deposit(amount, bank_card);
+                    response = "APPROVED";
+                    send(client, response, strlen(response), 0);
+                }
+                else if (tokens[0] == "WITHDRAW") {
+                    int amount = stoi(tokens[1]);
+                    withdraw(amount, bank_card);
+                    response = "APPROVED";
+                    send(client, response, strlen(response), 0);
+                }
+                else if (tokens[0] == "BALANCE") {
+                    int balance = get_balance(bank_card);
+                    response = to_string(balance).c_str();
+                    send(client, response, strlen(response), 0);
+                }
             }
-            else if (tokens[0] == "DEPOSIT") {
-                int amount = stoi(tokens[1]);
-                deposit(amount, bank_card);
-                response = "APPROVED";
-                send(client, response, strlen(response), 0);
-            }
-            else if (tokens[0] == "WITHDRAW") {
-                int amount = stoi(tokens[1]);
-                withdraw(amount, bank_card);
-                response = "APPROVED";
-                send(client, response, strlen(response), 0);
-            }
-            else if (tokens[0] == "BALANCE") {
-                int balance = get_balance(bank_card);
-                response = to_string(balance).c_str();
-                send(client, response, strlen(response), 0);
-            }
+
+
+            // Close client socket
+            close(client);
         }
 
-
-        // Close client socket
-        close(client);
     }
 
-}
 
-
-   
 
 public:
     Bank() {
@@ -178,17 +182,17 @@ public:
     }
 
     void create_customer_credentials(const string& bank_card, const string& pass){
-        if (credentials_database.find(bank_card) == credentials_database.end()){
-            credentials_database[bank_card] = pass;
+        string hashed_bank_card = hash_msg(bank_card);
+        string hashed_pass = hash_msg(pass);
+        if (credentials_database.find(hashed_bank_card) == credentials_database.end()){
+            credentials_database[hashed_bank_card] = hashed_pass;
             //Init bank amount to 0
-            bank_account_database[bank_card] = 0;
+            bank_account_database[hashed_bank_card] = 0;
             std::cout << "Credentials created for bank card: " << bank_card << std::endl;
         } else {
             std::cerr << "Bank card already exists in the database." << std::endl;
         }
-
     }
-
 
     void run() {
 

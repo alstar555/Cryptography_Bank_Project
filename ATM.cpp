@@ -74,18 +74,33 @@ int login(const string& bank_card, const string& pass) {
 int deposit(const string& amount) {
     string message = "DEPOSIT " + amount;
     sendBankMsg(message.c_str());
-    return 0;
+    string response = recvBankMsg();
+    if (response == "APPROVED") {
+        cout << "Deposit Approved" << endl;
+        return 1;
+    }else{
+        cerr << "Deposit Not Approved" << endl;
+        return 0;
+    }
 }
 
 int withdraw(const string& amount) {
     sendBankMsg("WITHDRAW "+amount);
-    return 0;
+    string response = recvBankMsg();
+    if (response == "APPROVED") {
+        cout << "Withdraw Approved" << endl;
+        return 1;
+    }else{
+        cerr << "Withdraw Not Approved" << endl;
+        return 0;
+    }
 }
 
 
-int balance() {
+string balance() {
     sendBankMsg("BALANCE");
-    return 0;
+    string response = recvBankMsg();
+    return response;
 }
 
 int sendBankMsg (const string& msg) {
@@ -177,11 +192,12 @@ public:
                     withdraw(amount);
                     break;
                 case 3:
-                    balance();
+                    amount = balance();
+                    std::cout << "Your Current Balance is: $" << amount << endl;
                     break;
                 case 4:
                     std::cout << "Exiting ATM.\n" << std::endl;
-                    return;
+                    break;
                 default:
                     std::cout << "Invalid choice, please try again.\n" << std::endl;
             }

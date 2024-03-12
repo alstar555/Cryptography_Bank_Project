@@ -16,6 +16,7 @@ using namespace std;
 class Bank {
 private:
     map<string, string> credentials_database;
+    map<string, int> bank_account_database;
 
     int server;
     int client;
@@ -48,6 +49,18 @@ private:
         return 0;
     }
 
+    void deposit(const int amount, const string& bank_card){
+        bank_account_database[bank_card] += amount;
+    }
+
+     void withdraw(const int amount, const string& bank_card){
+        bank_account_database[bank_card] -= amount;
+    }
+
+     int get_balance(const string& bank_card){
+        return bank_account_database[bank_card] ;
+    }
+
 
 
 void run_server() {
@@ -75,6 +88,7 @@ void run_server() {
     cout << "Server is listening...\n";
 
     // Accept connection
+    string bank_card;
     while (true) {
         socklen_t size = sizeof(address);
         client = accept(server, (struct sockaddr *)&address, &size);
@@ -115,7 +129,7 @@ void run_server() {
             const char* response;
             int authenticated = 0;
             if (tokens[0] == "LOGIN") {
-                string bank_card = tokens[1];
+                bank_card = tokens[1];
                 string pass = tokens[2]; 
                 cout << "bank_card: " << bank_card << endl;
                 cout << "pass: " << pass << endl;
@@ -130,15 +144,20 @@ void run_server() {
                 send(client, response, strlen(response), 0);
             }
             else if (tokens[0] == "DEPOSIT") {
-                response = "Deposit Approved.\n";
+                int amount = stoi(tokens[1]);
+                deposit(amount, bank_card);
+                response = "APPROVED";
                 send(client, response, strlen(response), 0);
             }
             else if (tokens[0] == "WITHDRAW") {
-                response = "Withdraw Approved.\n";
+                int amount = stoi(tokens[1]);
+                withdraw(amount, bank_card);
+                response = "APPROVED";
                 send(client, response, strlen(response), 0);
             }
             else if (tokens[0] == "BALANCE") {
-                response = "Balance Amount:\n";
+                int balance = get_balance(bank_card);
+                response = to_string(balance).c_str();
                 send(client, response, strlen(response), 0);
             }
         }
@@ -161,6 +180,8 @@ public:
     void create_customer_credentials(const string& bank_card, const string& pass){
         if (credentials_database.find(bank_card) == credentials_database.end()){
             credentials_database[bank_card] = pass;
+            //Init bank amount to 0
+            bank_account_database[bank_card] = 0;
             std::cout << "Credentials created for bank card: " << bank_card << std::endl;
         } else {
             std::cerr << "Bank card already exists in the database." << std::endl;

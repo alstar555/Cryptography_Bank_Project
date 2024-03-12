@@ -121,7 +121,7 @@ public:
 
 
     void displayMenu() {
-        std::cout << "ATM" << std::endl;
+        std::cout << "\nATM" << std::endl;
         std::cout << "1. Deposit" << std::endl;
         std::cout << "2. Withdraw Money" << std::endl;
         std::cout << "3. Check Balance" << std::endl;
@@ -135,6 +135,7 @@ public:
 
         std::string bankCardNumber, pin;
         int authenticated=0;
+        int attempts = 0;
         while(authenticated==0){
             std::cout << "\nEnter your bank card number: ";
             std::cin >> bankCardNumber;
@@ -142,10 +143,14 @@ public:
             std::cin >> pin;
             authenticated = login(bankCardNumber, pin);
             if(authenticated){
-                cout << "Logged In.\n";
                 break;
             }
             cerr << "Incorrect Credentials, Try Again.\n";
+            if(attempts>=3){
+                cerr << "Too Many Attempts. Exiting...\n";
+                exit(1);
+            }
+            attempts++;
 
         }
 

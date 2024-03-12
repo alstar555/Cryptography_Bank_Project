@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <cstring>
 #include <sstream>
+#include <map>
 
 
 using namespace std;
@@ -14,6 +15,8 @@ using namespace std;
 // Bank Server Instance
 class Bank {
 private:
+    map<string, string> credentials_database;
+
     int server;
     int client;
     int port = 1500;
@@ -34,13 +37,19 @@ private:
         return string(buffer);
     }
 
-
-   
-
-public:
-    Bank() {
-       
+    int validate_login(const string& bank_card, const string& pass){
+        if (credentials_database.find(bank_card) == credentials_database.end()){
+            return 0;
+        }else{
+            if(credentials_database[bank_card] == pass){
+                return 1;
+            }
+        }
+        return 0;
     }
+
+
+
 void run_server() {
     // Create socket
     server = socket(AF_INET, SOCK_STREAM, 0);
@@ -103,23 +112,34 @@ void run_server() {
             while (std::getline(iss, token, ' ')) {
                 tokens.push_back(token);
             }
+            const char* response;
+            int authenticated = 0;
             if (tokens[0] == "LOGIN") {
                 string bank_card = tokens[1];
                 string pass = tokens[2]; 
                 cout << "bank_card: " << bank_card << endl;
                 cout << "pass: " << pass << endl;
-                const char* response = "APPROVED";
+                authenticated = validate_login(bank_card, pass);
+                if(authenticated){
+                    response = "APPROVED";
+                    cout << "Login Successful.\n";
+                }else{
+                    cout << "Login not Approved.\n";
+                    response = "BAD LOGIN";
+                }
                 send(client, response, strlen(response), 0);
-                cout << "Login Successful.\n";
             }
             else if (tokens[0] == "DEPOSIT") {
-                cout << "Deposit Approved.\n";
+                response = "Deposit Approved.\n";
+                send(client, response, strlen(response), 0);
             }
             else if (tokens[0] == "WITHDRAW") {
-                cout << "Withdraw Approved.\n";
+                response = "Withdraw Approved.\n";
+                send(client, response, strlen(response), 0);
             }
             else if (tokens[0] == "BALANCE") {
-                cout << "Balance Amount:\n";
+                response = "Balance Amount:\n";
+                send(client, response, strlen(response), 0);
             }
         }
 
@@ -131,8 +151,23 @@ void run_server() {
 }
 
 
+   
 
-  
+public:
+    Bank() {
+       
+    }
+
+    void create_customer_credentials(const string& bank_card, const string& pass){
+        if (credentials_database.find(bank_card) == credentials_database.end()){
+            credentials_database[bank_card] = pass;
+            std::cout << "Credentials created for bank card: " << bank_card << std::endl;
+        } else {
+            std::cerr << "Bank card already exists in the database." << std::endl;
+        }
+
+    }
+
 
     void run() {
 
@@ -145,6 +180,10 @@ void run_server() {
 int main() {
   
     Bank bank;
+
+    //Create some customers
+    bank.create_customer_credentials("1234", "4321");
+
     bank.run();
 
   

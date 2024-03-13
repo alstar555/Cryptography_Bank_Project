@@ -7,36 +7,30 @@
 #include <cstring>
 #include "SHA-1.cpp"
 
-
-using namespace std;
-
-
 // ATM Client Instance
 class ATM {
 private:
 
     int port = 1500;
-    string ip = "127.0.0.1";
+    std::string ip = "127.0.0.1";
     int client;
 
-    string public_key = "987654321";
+    std::string public_key = "987654321";
 
-    string encrypt(const string& msg) {
-        string encrypted_msg = msg;
+    std::string encrypt(const std::string& msg) {
+        std::string encrypted_msg = msg;
         return encrypted_msg;
     }
 
-    string hash_msg(const string& msg) {
-        SHA1 sha1;
-        string hashed_msg = sha1(msg);
-        return hashed_msg;
+    std::string hash_msg(const std::string& msg) {
+        return msg;
     }
 
     void run_client() {
     // Create socket
     client = socket(AF_INET, SOCK_STREAM, 0);
     if (client < 0) {
-        cerr << "Error creating socket.\n";
+        std::cerr << "Error creating socket.\n";
         exit(1);
     }
 
@@ -48,11 +42,11 @@ private:
 
     // Connect to server
     if (connect(client, (struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
-        cerr << "Error connecting to server.\n";
+        std::cerr << "Error connecting to server.\n";
         exit(1);
     }
 
-    cout << "Connected to server.\n";
+    std::cout << "Connected to server.\n";
 
     // Receive message from server
     recvBankMsg();
@@ -62,10 +56,10 @@ private:
 
 }
 
-int login(const string& bank_card, const string& pass) {
-    string message = "LOGIN " + hash_msg(bank_card) + " " + hash_msg(pass);
+int login(const std::string& bank_card, const std::string& pass) {
+    std::string message = "LOGIN " + hash_msg(bank_card) + " " + hash_msg(pass);
     sendBankMsg(message.c_str());
-    string response = recvBankMsg();
+    std::string response = recvBankMsg();
     if (response == "APPROVED") {
         return 1;
     }else{
@@ -73,39 +67,39 @@ int login(const string& bank_card, const string& pass) {
     }
 }
 
-int deposit(const string& amount) {
-    string message = "DEPOSIT " + amount;
+int deposit(const std::string& amount) {
+    std::string message = "DEPOSIT " + amount;
     sendBankMsg(message.c_str());
-    string response = recvBankMsg();
+    std::string response = recvBankMsg();
     if (response == "APPROVED") {
-        cout << "Deposit Approved" << endl;
+        std::cout << "Deposit Approved" << std::endl;
         return 1;
     }else{
-        cerr << "Deposit Not Approved" << endl;
+        std::cerr << "Deposit Not Approved" << std::endl;
         return 0;
     }
 }
 
-int withdraw(const string& amount) {
+int withdraw(const std::string& amount) {
     sendBankMsg("WITHDRAW "+amount);
-    string response = recvBankMsg();
+    std::string response = recvBankMsg();
     if (response == "APPROVED") {
-        cout << "Withdraw Approved" << endl;
+        std::cout << "Withdraw Approved" << std::endl;
         return 1;
     }else{
-        cerr << "Withdraw Not Approved" << endl;
+        std::cerr << "Withdraw Not Approved" << std::endl;
         return 0;
     }
 }
 
 
-string balance() {
+std::string balance() {
     sendBankMsg("BALANCE");
-    string response = recvBankMsg();
+    std::string response = recvBankMsg();
     return response;
 }
 
-int sendBankMsg (const string& msg) {
+int sendBankMsg (const std::string& msg) {
     std::string encryptedMsg = encrypt(msg);
     int bytes_sent = send(client, encryptedMsg.c_str(), encryptedMsg.length(), 0);
 
@@ -116,11 +110,11 @@ int sendBankMsg (const string& msg) {
     return 1;
 }
 
-string recvBankMsg () {
+std::string recvBankMsg () {
     char buffer[1024] = {0};
     recv(client, buffer, sizeof(buffer), 0);
-    cout << "Server: " << buffer << endl;
-    return string(buffer);
+    std::cout << "Server: " << buffer << std::endl;
+    return std::string(buffer);
 }
 
 
@@ -162,18 +156,18 @@ public:
             if(authenticated){
                 break;
             }
-            cerr << "Incorrect Credentials, Try Again.\n";
+            std::cerr << "Incorrect Credentials, Try Again.\n";
             if(attempts>=3){
-                cerr << "Too Many Attempts. Exiting...\n";
+                std::cerr << "Too Many Attempts. Exiting...\n";
                 exit(1);
             }
             attempts++;
 
         }
 
-        cout << "Logged In.\n";
+        std::cout << "Logged In.\n";
 
-        string amount;
+        std::string amount;
         while (authenticated) {
             displayMenu();
             std::cout << "Enter your choice: ";
@@ -183,19 +177,19 @@ public:
                 case 1: {
                     std::cout << "\nEnter amount to deposit: $";
                     std::cin >> amount;
-                    cout << endl;
+                    std::cout << std::endl;
                     deposit(amount);
                     break;
                 }
                 case 2:
                     std::cout << "\nEnter amount to withdraw: $";
                     std::cin >> amount;
-                    cout << endl;
+                    std::cout << std::endl;
                     withdraw(amount);
                     break;
                 case 3:
                     amount = balance();
-                    std::cout << "Your Current Balance is: $" << amount << endl;
+                    std::cout << "Your Current Balance is: $" << amount << std::endl;
                     break;
                 case 4:
                     std::cout << "Exiting ATM.\n" << std::endl;

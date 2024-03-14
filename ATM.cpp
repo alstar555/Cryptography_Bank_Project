@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <cstring>
 #include "SHA-1.cpp"
+#include <boost/multiprecision/cpp_int.hpp>
 
 // ATM Client Instance
 class ATM {

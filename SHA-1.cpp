@@ -12,25 +12,22 @@ private:
 
     std::vector<uint8_t> add_padding(const std::string& message) {
         std::vector<uint8_t> bytes(message.begin(), message.end());
-        
         // Append the bit '1' to the message by adding 0x80
         bytes.emplace_back(static_cast<uint8_t>(0x80));
-
         // Append'0' until the total length of msg is a multiple of 64-8 bytes 
         while((bytes.size()+8) % BLOCK_LEN != 0){
             bytes.emplace_back(static_cast<uint8_t>(0x00));
-        }
-
+        }   
+        // Append length
         uint64_t bit_length = 8 * message.length();
         for ( int32_t i = 7; i >= 0; --i ) {
             bytes.emplace_back(static_cast<int8_t>(bit_length >> ( 8 * i )));
         }
-
         return bytes;
     }
 
     uint32_t left_rotate(uint32_t n, int shift, int b){
-        return (n << n) | (n >> b-n);
+        return (n << shift) | (n >> (b-shift));
     }
 
     
@@ -39,7 +36,6 @@ private:
 public:
     // Generate a 160 bit message digest
     std::string operator()(const std::string& message) {
-        std::string msg_hashed = "";
 
         // Init hash H values
         uint32_t H0 = 0x67452301;
@@ -48,23 +44,22 @@ public:
         uint32_t H3 = 0x10325476;
         uint32_t H4 = 0xC3D2E1F0;
 
+        std::vector<uint32_t> w(80, 0);
+
         // Msg padded to divide 64 bytes
         const std::vector<uint8_t> padded_msg = add_padding(message);
 
         // Divide mssg into 64 byte chunks
         for(uint64_t i = 0; i < padded_msg.size()/BLOCK_LEN; i++) {
-            std::vector<uint32_t> w(80, 0);
+
             for(uint32_t j = 0; j < BLOCK_LEN; j++) {
                  // Divide chunks into 16 4-byte words
                 w[j/4] |= (padded_msg[i * BLOCK_LEN + j])  << ( ( 3 - j % 4 ) * 8 );
-
-
             }
             // Extend the sixteen words into eighty words:
-            for(int i = 16; i!= 80; i++){
-                w[i] = left_rotate(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1, 32);
+            for(uint8_t j = 16; j!= 80; j++){
+                w[j] = left_rotate(w[j-3] ^ w[j-8] ^ w[j-14] ^ w[j-16], 1, 32);
             }
-
 
             uint32_t a = H0;
             uint32_t b = H1;
@@ -77,7 +72,6 @@ public:
 
             // Bit manipulations 
             for(int j = 0; j!= 80; j++){
-
 
                 if (0 <= j && j <= 19){
                     f = (b & c) | (~b & d);
@@ -95,8 +89,10 @@ public:
                     f = b ^ c ^ d;
                     k = 0xCA62C1D6;
                 }
+
                 temp = left_rotate(a, 5, 32) + f + e + k + w[j];
-       
+
+                // std::cout << temp << std::endl;
                 e = d;
                 d = c;
                 c = left_rotate(b, 30, 32);
@@ -113,16 +109,12 @@ public:
         }
 
          // Concatenate the hashed blocks into 160-bit number
-        std::stringstream HH_stream;
-        HH_stream << std::hex << std::setw(8) << std::setfill('0') << H0;
-        HH_stream << std::hex << std::setw(8) << std::setfill('0') << H1;
-        HH_stream << std::hex << std::setw(8) << std::setfill('0') << H2;
-        HH_stream << std::hex << std::setw(8) << std::setfill('0') << H3;
-        HH_stream << std::hex << std::setw(8) << std::setfill('0') << H4;
-
-        return HH_stream.str();
+        std::stringstream ss;
+        std::string HH;
+        ss <<std::hex<<H0<<H1<<H2<<H3<<H4;
+        ss>>HH;
+        return HH;
     }
-    
     
 };
 
@@ -132,7 +124,7 @@ int main() {
   
     SHA1 sha;
 
-    std::cout << sha("Testing testing 123 ...");
+    std::cout << sha("Testing HELLO testing 123");
     std::cout << std::endl;
 
   

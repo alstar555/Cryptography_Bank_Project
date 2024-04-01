@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <cstring>
-#include "SHA-1.cpp"
+#include "SHA-1.h"
 #include <boost/multiprecision/cpp_int.hpp>
 
 // ATM Client Instance

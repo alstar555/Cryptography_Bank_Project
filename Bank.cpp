@@ -7,7 +7,7 @@
 #include <cstring>
 #include <sstream>
 #include <map>
-#include "SHA-1.cpp"
+#include "SHA-1.h"
 
 // Bank Server Instance
 class Bank {

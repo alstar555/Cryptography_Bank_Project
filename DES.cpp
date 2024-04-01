@@ -63,6 +63,34 @@ unsigned long DES::decrypt3(unsigned long ciphertext, unsigned long key1, unsign
     return ret;
 }
 
+std::vector<unsigned long>
+DES::encrypt3_cbc(const std::vector<unsigned long> &plaintext, unsigned long key1, unsigned long key2, unsigned long key3, unsigned long iv) {
+    std::vector<unsigned long> ret;
+    unsigned long prev = iv;
+
+    for (unsigned long val : plaintext) {
+        unsigned long tmp = encrypt3(prev ^ val, key1, key2, key3);
+        ret.push_back(tmp);
+        prev = tmp;
+    }
+
+    return ret;
+}
+
+std::vector<unsigned long>
+DES::decrypt3_cbc(const std::vector<unsigned long> &ciphertext, unsigned long key1, unsigned long key2, unsigned long key3, unsigned long iv) {
+    std::vector<unsigned long> ret;
+
+    if (!ciphertext.empty()) {
+        ret.push_back(decrypt3(ciphertext[0], key1, key2, key3) ^ iv);
+    }
+    for (int i = 1; i < ciphertext.size(); i++) {
+        ret.push_back(decrypt3(ciphertext[i], key1, key2, key3) ^ ciphertext[i - 1]);
+    }
+
+    return ret;
+}
+
 unsigned long DES::do_round(unsigned long left_side, unsigned long right_side, unsigned long round_key) {
     unsigned long ret = right_side;
     ret |= (f_function(right_side, round_key) ^ left_side) << 32;

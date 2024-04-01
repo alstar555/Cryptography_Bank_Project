@@ -10,5 +10,5 @@ add_executable(ATM
 target_link_libraries(ATM PRIVATE Boost::boost)
 
 add_executable(Bank
-        Bank.cpp SHA-1.cpp)
+        Bank.cpp SHA-1.cpp Client.cpp DESKey.cpp DH.cpp)
 target_link_libraries(Bank PRIVATE Boost::boost)

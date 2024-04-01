@@ -49,27 +49,27 @@ unsigned long DES::decrypt(unsigned long ciphertext, unsigned long key) {
     return inverse_initial_perm(tmp);
 }
 
-unsigned long DES::encrypt3(unsigned long plaintext, unsigned long key1, unsigned long key2, unsigned long key3) {
-    unsigned long ret = encrypt(plaintext, key1);
-    ret = decrypt(ret, key2);
-    ret = encrypt(ret, key3);
+unsigned long DES::encrypt3(unsigned long plaintext, const DESKey& key) {
+    unsigned long ret = encrypt(plaintext, key.getKey1());
+    ret = decrypt(ret, key.getKey2());
+    ret = encrypt(ret, key.getKey3());
     return ret;
 }
 
-unsigned long DES::decrypt3(unsigned long ciphertext, unsigned long key1, unsigned long key2, unsigned long key3) {
-    unsigned long ret = decrypt(ciphertext, key3);
-    ret = encrypt(ret, key2);
-    ret = decrypt(ret, key1);
+unsigned long DES::decrypt3(unsigned long ciphertext, const DESKey& key) {
+    unsigned long ret = decrypt(ciphertext, key.getKey3());
+    ret = encrypt(ret, key.getKey2());
+    ret = decrypt(ret, key.getKey1());
     return ret;
 }
 
 std::vector<unsigned long>
-DES::encrypt3_cbc(const std::vector<unsigned long> &plaintext, unsigned long key1, unsigned long key2, unsigned long key3, unsigned long iv) {
+DES::encrypt3_cbc(const std::vector<unsigned long> &plaintext, const DESKey& key, unsigned long iv) {
     std::vector<unsigned long> ret;
     unsigned long prev = iv;
 
     for (unsigned long val : plaintext) {
-        unsigned long tmp = encrypt3(prev ^ val, key1, key2, key3);
+        unsigned long tmp = encrypt3(prev ^ val, key);
         ret.push_back(tmp);
         prev = tmp;
     }
@@ -78,14 +78,14 @@ DES::encrypt3_cbc(const std::vector<unsigned long> &plaintext, unsigned long key
 }
 
 std::vector<unsigned long>
-DES::decrypt3_cbc(const std::vector<unsigned long> &ciphertext, unsigned long key1, unsigned long key2, unsigned long key3, unsigned long iv) {
+DES::decrypt3_cbc(const std::vector<unsigned long> &ciphertext, const DESKey& key, unsigned long iv) {
     std::vector<unsigned long> ret;
 
     if (!ciphertext.empty()) {
-        ret.push_back(decrypt3(ciphertext[0], key1, key2, key3) ^ iv);
+        ret.push_back(decrypt3(ciphertext[0], key) ^ iv);
     }
     for (int i = 1; i < ciphertext.size(); i++) {
-        ret.push_back(decrypt3(ciphertext[i], key1, key2, key3) ^ ciphertext[i - 1]);
+        ret.push_back(decrypt3(ciphertext[i], key) ^ ciphertext[i - 1]);
     }
 
     return ret;

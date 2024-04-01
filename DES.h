@@ -2,6 +2,7 @@
 #define CRYPTOGRAPHY_BANK_PROJECT_DES_H
 
 #include <vector>
+#include "DESKey.h"
 
 class DES {
 private:
@@ -43,13 +44,13 @@ public:
 
     // Triple DES below
 
-    static unsigned long encrypt3(unsigned long plaintext, unsigned long key1, unsigned long key2, unsigned long key3);
+    static unsigned long encrypt3(unsigned long plaintext, const DESKey& key);
 
-    static unsigned long decrypt3(unsigned long ciphertext, unsigned long key1, unsigned long key2, unsigned long key3);
+    static unsigned long decrypt3(unsigned long ciphertext, const DESKey& key);
 
-    static std::vector<unsigned long> encrypt3_cbc(const std::vector<unsigned long>& plaintext, unsigned long key1, unsigned long key2, unsigned long key3, unsigned long iv);
+    static std::vector<unsigned long> encrypt3_cbc(const std::vector<unsigned long>& plaintext, const DESKey& key, unsigned long iv);
 
-    static std::vector<unsigned long> decrypt3_cbc(const std::vector<unsigned long>& ciphertext, unsigned long key1, unsigned long key2, unsigned long key3, unsigned long iv);
+    static std::vector<unsigned long> decrypt3_cbc(const std::vector<unsigned long>& ciphertext, const DESKey& key, unsigned long iv);
 };
 
 #endif //CRYPTOGRAPHY_BANK_PROJECT_DES_H

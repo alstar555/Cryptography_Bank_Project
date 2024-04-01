@@ -42,18 +42,3 @@ boost::multiprecision::cpp_int DH::get_send_value() {
 void DH::build_shared_secret(boost::multiprecision::cpp_int from_val) {
     shared_secret = boost::multiprecision::powm(from_val, local_secret, p);
 }
-
-
-
-int main() {
-    DH d1;
-    DH d2;
-
-    d2.build_shared_secret(d1.get_send_value());
-    d1.build_shared_secret(d2.get_send_value());
-
-    std::cout << d1.get_shared_secret() << std::endl;
-    std::cout << d2.get_shared_secret() << std::endl;
-
-    std::cout << (d1.get_shared_secret() == d2.get_shared_secret()) << std::endl;
-}

@@ -8,6 +8,7 @@
 #include <sstream>
 #include <map>
 #include "SHA-1.h"
+#include "Client.h"
 
 // Bank Server Instance
 class Bank {

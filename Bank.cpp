@@ -60,7 +60,8 @@ private:
     }
 
     std::string hash_msg(const std::string& msg) {
-        return msg;
+        SHA1 sha1;
+        return sha1(msg);
     }
 
     void run_server() {

@@ -37,19 +37,11 @@ public:
     }
 
     cpp_int encrypt(cpp_int M, cpp_int N, cpp_int e) {
-        cpp_int C = 1;
-        for (cpp_int i = 0; i < e; ++i) {
-            C = (C * M) % N;
-        }
-        return C;
+        return boost::multiprecision::powm(M, e, N);
     }
 
     cpp_int decrypt(cpp_int c, cpp_int d, cpp_int N) {
-        cpp_int D = 1;
-        for (cpp_int i = 0; i < d; i++) {
-            D = (D * c) % N;
-        }
-        return D;
+        return boost::multiprecision::powm(c, d, N);
     }
 };
 
@@ -61,9 +53,9 @@ int main() {
     std::cout << std::endl;
 
     // RSA vars
-    RSA::cpp_int p = get_random_prime(2); 
-    RSA::cpp_int q = get_random_prime(2);
-    std::cout << "p: " << p << " q: " << q << std::endl;
+    RSA::cpp_int p = get_random_prime(128); 
+    RSA::cpp_int q = get_random_prime(128);
+    std::cout << "p: " << p << "\nq: " << q << std::endl;
     RSA::cpp_int N = p * q;
     RSA::cpp_int e = 7;
     RSA::cpp_int phi = (p - 1) * (q - 1);

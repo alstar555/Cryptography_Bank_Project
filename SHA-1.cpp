@@ -33,7 +33,6 @@ std::string SHA1::operator()(const std::string &message) {
     uint32_t H3 = 0x10325476;
     uint32_t H4 = 0xC3D2E1F0;
 
-    std::vector<uint32_t> w(80, 0);
 
     // Msg padded to divide 64 bytes
     const std::vector<uint8_t> padded_msg = add_padding(message);
@@ -41,6 +40,8 @@ std::string SHA1::operator()(const std::string &message) {
     // Divide mssg into 64 byte chunks
     for(uint64_t i = 0; i < padded_msg.size()/BLOCK_LEN; i++) {
 
+        std::vector<uint32_t> w(80, 0);
+        
         for(uint32_t j = 0; j < BLOCK_LEN; j++) {
             // Divide chunks into 16 4-byte words
             w[j/4] |= (padded_msg[i * BLOCK_LEN + j])  << ( ( 3 - j % 4 ) * 8 );
@@ -50,13 +51,14 @@ std::string SHA1::operator()(const std::string &message) {
             w[j] = left_rotate(w[j-3] ^ w[j-8] ^ w[j-14] ^ w[j-16], 1, 32);
         }
 
+
         uint32_t a = H0;
         uint32_t b = H1;
         uint32_t c = H2;
         uint32_t d = H3;
         uint32_t e = H4;
-        uint32_t f=0;
-        uint32_t k=0;
+        uint32_t f;
+        uint32_t k;
         uint32_t temp;
 
         // Bit manipulations
@@ -81,12 +83,14 @@ std::string SHA1::operator()(const std::string &message) {
 
             temp = left_rotate(a, 5, 32) + f + e + k + w[j];
 
-            // std::cout << temp << std::endl;
+
+
             e = d;
             d = c;
             c = left_rotate(b, 30, 32);
             b = a;
             a = temp;
+
 
         }
         // Append results to hash
@@ -95,6 +99,7 @@ std::string SHA1::operator()(const std::string &message) {
         H2 += c;
         H3 += d;
         H4 += e;
+
     }
 
     // Concatenate the hashed blocks into 160-bit number
@@ -102,5 +107,6 @@ std::string SHA1::operator()(const std::string &message) {
     std::string HH;
     ss <<std::hex<<H0<<H1<<H2<<H3<<H4;
     ss>>HH;
+    
     return HH;
 }

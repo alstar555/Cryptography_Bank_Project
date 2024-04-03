@@ -13,6 +13,8 @@ private:
 public:
     // Generate a 160 bit message digest
     std::string operator()(const std::string& message);
+
+    std::string hex_rep(const std::string& message);
 };
 
 #endif //CRYPTOGRAPHY_BANK_PROJECT_SHA_1_H

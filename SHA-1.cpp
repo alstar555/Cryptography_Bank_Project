@@ -3,7 +3,9 @@
 #include <bit>
 #include <vector>
 #include <sstream>
+#include <iomanip>
 #include "SHA-1.h"
+#include "Utils.h"
 
 std::vector<uint8_t> SHA1::add_padding(const std::string &message) {
     std::vector<uint8_t> bytes(message.begin(), message.end());
@@ -102,11 +104,33 @@ std::string SHA1::operator()(const std::string &message) {
 
     }
 
-    // Concatenate the hashed blocks into 160-bit number
-    std::stringstream ss;
+//    // Concatenate the hashed blocks into 160-bit number
+//    std::stringstream ss;
+//    std::string HH;
+//    ss <<std::hex<<H0<<H1<<H2<<H3<<H4;
+//    ss>>HH;
+
     std::string HH;
-    ss <<std::hex<<H0<<H1<<H2<<H3<<H4;
-    ss>>HH;
+    for (int i = 0; i < 4; i++) {
+        HH.push_back((uint8_t)((H0 >> (8*(3-i))) & ((1 << 8) - 1)));
+    }
+    for (int i = 0; i < 4; i++) {
+        HH.push_back((uint8_t)((H1 >> (8*(3-i))) & ((1 << 8) - 1)));
+    }
+    for (int i = 0; i < 4; i++) {
+        HH.push_back((uint8_t)((H2 >> (8*(3-i))) & ((1 << 8) - 1)));
+    }
+    for (int i = 0; i < 4; i++) {
+        HH.push_back((uint8_t)((H3 >> (8*(3-i))) & ((1 << 8) - 1)));
+    }
+    for (int i = 0; i < 4; i++) {
+        HH.push_back((uint8_t)((H4 >> (8*(3-i))) & ((1 << 8) - 1)));
+    }
     
     return HH;
+}
+
+std::string SHA1::hex_rep(const std::string &message) {
+    std::string raw = operator()(message);
+    return convert_byte_str_to_hex(raw);
 }

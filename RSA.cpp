@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
-#include "Utils.hpp"
+#include "Utils.h"
 #include <boost/multiprecision/cpp_int.hpp>
 
 class RSA {

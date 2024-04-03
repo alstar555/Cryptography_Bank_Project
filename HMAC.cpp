@@ -2,9 +2,8 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
-#include "Utils.hpp"
+#include "Utils.h"
 #include "SHA-1.h"
-#include "string.h"
 #include <boost/multiprecision/cpp_int.hpp>
 
 class HMAC {
@@ -35,9 +34,10 @@ private:
 
     std::string resize_key(const std::string& key) {
     	if (key.length() > block_size){
-        	return hash(key);
+            std::string hashed = hash(key);
+        	return hashed + std::string(block_size - hashed.length(), '\x00');
     	}
-        if (key.length() > block_size){
+        if (key.length() < block_size){
         	return key + std::string(block_size - key.length(), '\x00');
     	}
     	return key;

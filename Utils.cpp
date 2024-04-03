@@ -1,6 +1,3 @@
-#ifndef CRYPTOGRAPHY_BANK_PROJECT_UTILS_HPP
-#define CRYPTOGRAPHY_BANK_PROJECT_UTILS_HPP
-
 #include <vector>
 #include <fstream>
 #include <boost/multiprecision/cpp_int.hpp>
@@ -32,4 +29,10 @@ boost::multiprecision::cpp_int get_random_prime(unsigned int num_bytes) {
     }
 }
 
-#endif //CRYPTOGRAPHY_BANK_PROJECT_UTILS_HPP
+std::string convert_byte_str_to_hex(const std::string& byte_str) {
+    std::stringstream ss;
+    for (char c : byte_str) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)(uint8_t)c;
+    }
+    return ss.str();
+}

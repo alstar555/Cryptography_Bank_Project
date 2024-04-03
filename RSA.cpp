@@ -57,7 +57,7 @@ int main() {
     RSA::cpp_int q = get_random_prime(128);
     std::cout << "p: " << p << "\nq: " << q << std::endl;
     RSA::cpp_int N = p * q;
-    RSA::cpp_int e = 7;
+    RSA::cpp_int e = 65537;
     RSA::cpp_int phi = (p - 1) * (q - 1);
     RSA::cpp_int d = rsa.modinv(e, phi);
 

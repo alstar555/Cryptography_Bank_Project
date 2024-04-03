@@ -1,16 +1,16 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <bitset>
 #include <cstdlib>
+#include "Utils.hpp"
+#include <boost/multiprecision/cpp_int.hpp>
 
-
-class RSA{
-private:
-
+class RSA {
 public:
-    uint64_t modinv(uint64_t u, uint64_t v) {
-        uint64_t inv, u1, u3, v1, v3, t1, t3, q;
+    using cpp_int = boost::multiprecision::cpp_int;
+
+    cpp_int modinv(cpp_int u, cpp_int v) {
+        cpp_int inv, u1, u3, v1, v3, t1, t3, q;
         int64_t iter;
         u1 = 1;
         u3 = u;
@@ -36,18 +36,17 @@ public:
         return inv;
     }
 
-    long long encrypt(long long M, long long N, long long e) {
-        long long C = 1;
-        for (int i = 0; i < e; ++i) {
+    cpp_int encrypt(cpp_int M, cpp_int N, cpp_int e) {
+        cpp_int C = 1;
+        for (cpp_int i = 0; i < e; ++i) {
             C = (C * M) % N;
         }
         return C;
     }
 
-
-    long long decrypt(long long c, long long d, long long N) {
-        long long D = 1;
-        for (int i = 0; i < d; i++) {
+    cpp_int decrypt(cpp_int c, cpp_int d, cpp_int N) {
+        cpp_int D = 1;
+        for (cpp_int i = 0; i < d; i++) {
             D = (D * c) % N;
         }
         return D;
@@ -55,7 +54,6 @@ public:
 };
 
 int main() {
-
     RSA rsa;
 
     std::string message = "NETSEC";
@@ -63,28 +61,29 @@ int main() {
     std::cout << std::endl;
 
     // RSA vars
-    long long N = 1211;
-    long long p = 173;
-    long long q = 7;
-    long long e = 7;
-    long long phi = (p - 1) * (q - 1);
-    long long d = rsa.modinv(e, phi);
+    RSA::cpp_int p = get_random_prime(2); 
+    RSA::cpp_int q = get_random_prime(2);
+    std::cout << "p: " << p << " q: " << q << std::endl;
+    RSA::cpp_int N = p * q;
+    RSA::cpp_int e = 7;
+    RSA::cpp_int phi = (p - 1) * (q - 1);
+    RSA::cpp_int d = rsa.modinv(e, phi);
 
-    std::vector<long long> C2;
-    std::vector<long long> D2;
+    std::vector<RSA::cpp_int> C2;
+    std::vector<RSA::cpp_int> D2;
 
     // Encrypt using RSA
     std::cout << "Cipher text after RSA encryption:" << std::endl;
     for (char c : message) {
-        long long cipher = rsa.encrypt(static_cast<long long>(c), N, e);
+        RSA::cpp_int cipher = rsa.encrypt(static_cast<RSA::cpp_int>(c), N, e);
         C2.push_back(cipher);
         std::cout << cipher << " ";
     }
 
     // Decrypt RSA
     std::cout << "\nAfter RSA decryption:" << std::endl;
-    for (long long c : C2) {
-        long long decrypt = rsa.decrypt(c, d, N);
+    for (RSA::cpp_int c : C2) {
+        RSA::cpp_int decrypt = rsa.decrypt(c, d, N);
         D2.push_back(decrypt);
         std::cout << static_cast<char>(decrypt) << " ";
     }

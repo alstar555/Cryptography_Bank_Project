@@ -7,7 +7,7 @@
 #include <cstring>
 #include <sstream>
 #include <map>
-#include "SHA-1.h"
+#include "crypto/SHA-1.h"
 #include "Client.h"
 
 // Bank Server Instance
@@ -15,10 +15,12 @@ class Bank {
 private:
     std::map<std::string, std::string> credentials_database; //stores bank card and pin
     std::map<std::string, int> bank_account_database; //stores account balance of users
+    std::map<int, Client> fd_clients;
 
-    int server;
-    int client;
+    int server_fd;
+    int client_fd;
     int port = 1500;
+    Client client;
     std::string private_key = "123456789";
 
     std::string decrypt(const std::string& msg) {
@@ -29,7 +31,7 @@ private:
     std::string recvATMMsg() {
         char buffer[1024] = {0};
         memset(buffer, 0, sizeof(buffer));
-        int bytes_recv = recv(client, buffer, sizeof(buffer), 0);
+        int bytes_recv = recv(client_fd, buffer, sizeof(buffer), 0);
         if (bytes_recv <= 0) {
             return ""; 
         }
@@ -66,8 +68,8 @@ private:
 
     void run_server() {
         // Create socket
-        server = socket(AF_INET, SOCK_STREAM, 0);
-        if (server < 0) {
+        server_fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (server_fd < 0) {
             std::cerr << "Error creating socket.\n";
             exit(1);
         }
@@ -79,93 +81,108 @@ private:
         address.sin_port = htons(port);
 
         // Bind socket
-        if (bind(server, (struct sockaddr *)&address, sizeof(address)) == -1) {
+        if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) == -1) {
             std::cerr << "Error binding.\n";
             exit(1);
         }
 
         // Listen
-        listen(server, 1);
+        listen(server_fd, 1);
         std::cout << "Server is listening...\n";
 
         // Accept connection
         std::string bank_card;
         while (true) {
             socklen_t size = sizeof(address);
-            client = accept(server, (struct sockaddr *)&address, &size);
-            if (client < 0) {
+            client_fd = accept(server_fd, (struct sockaddr *)&address, &size);
+            if (client_fd < 0) {
                 std::cerr << "Error accepting connection.\n";
                 continue;
             }
 
             std::cout << "Client connected.\n";
 
-            // Send message to client
-            char buffer[1024] = "Message from Bank Server.\n";
-            send(client, buffer, strlen(buffer), 0);
+            // Make new client object
+            // This establishes fresh DH secrets
+            client = Client();
 
-            // Receive messages from client
-            while (true) {
-                // Read the length of the incoming message
-                std::string buffer_str = recvATMMsg();
-                
-                // Check if the client disconnected
-                if (buffer_str == "") {
-                    std::cout << "Client disconnected.\n";
-                    break;
-                }
+            // Start "TLS" negotiation
 
-                // Decrypt request
-                std::string request = decrypt(buffer_str);
+            // send DH value signed by RSA key
 
-                std::cout << "Client: " << request << std::endl;
+            // receive DH value by other end and compute shared secret
 
-                // Process Client requests
-                std::istringstream iss(request);
-                std::vector<std::string> tokens;
-                std::string token;
-                while (std::getline(iss, token, ' ')) {
-                    tokens.push_back(token);
-                }
-                const char* response;
-                int authenticated = 0;
-                if (tokens[0] == "LOGIN") {
-                    bank_card = tokens[1];
-                    std::string pass = tokens[2];
-                    std::cout << "bank_card: " << bank_card << std::endl;
-                    std::cout << "pass: " << pass << std::endl;
-                    authenticated = validate_login(bank_card, pass);
-                    if(authenticated){
-                        response = "APPROVED";
-                        std::cout << "Login Successful.\n";
-                    }else{
-                        std::cout << "Login not Approved.\n";
-                        response = "BAD LOGIN";
-                    }
-                    send(client, response, strlen(response), 0);
-                }
-                else if (tokens[0] == "DEPOSIT") {
-                    int amount = stoi(tokens[1]);
-                    deposit(amount, bank_card);
-                    response = "APPROVED";
-                    send(client, response, strlen(response), 0);
-                }
-                else if (tokens[0] == "WITHDRAW") {
-                    int amount = stoi(tokens[1]);
-                    withdraw(amount, bank_card);
-                    response = "APPROVED";
-                    send(client, response, strlen(response), 0);
-                }
-                else if (tokens[0] == "BALANCE") {
-                    int balance = get_balance(bank_card);
-                    response = std::to_string(balance).c_str();
-                    send(client, response, strlen(response), 0);
-                }
-            }
+            // send DES encrypted message containing an HMAC key to use (sign this message too with RSA)
 
 
-            // Close client socket
-            close(client);
+            // send client_fd
+
+//            // Send message to client_fd
+//            char buffer[1024] = "Message from Bank Server.\n";
+//            send(client_fd, buffer, strlen(buffer), 0);
+
+//            // Receive messages from client_fd
+//            while (true) {
+//                // Read the length of the incoming message
+//                std::string buffer_str = recvATMMsg();
+//
+//                // Check if the client_fd disconnected
+//                if (buffer_str == "") {
+//                    std::cout << "Client disconnected.\n";
+//                    break;
+//                }
+//
+//                // Decrypt request
+//                std::string request = decrypt(buffer_str);
+//
+//                std::cout << "Client: " << request << std::endl;
+//
+//                // Process Client requests
+//                std::istringstream iss(request);
+//                std::vector<std::string> tokens;
+//                std::string token;
+//                while (std::getline(iss, token, ' ')) {
+//                    tokens.push_back(token);
+//                }
+//                const char* response;
+//                int authenticated = 0;
+//                if (tokens[0] == "LOGIN") {
+//                    bank_card = tokens[1];
+//                    std::string pass = tokens[2];
+//                    std::cout << "bank_card: " << bank_card << std::endl;
+//                    std::cout << "pass: " << pass << std::endl;
+//                    authenticated = validate_login(bank_card, pass);
+//                    if(authenticated){
+//                        response = "APPROVED";
+//                        std::cout << "Login Successful.\n";
+//                    }else{
+//                        std::cout << "Login not Approved.\n";
+//                        response = "BAD LOGIN";
+//                    }
+//                    send(client_fd, response, strlen(response), 0);
+//                }
+//                else if (tokens[0] == "DEPOSIT") {
+//                    int amount = stoi(tokens[1]);
+//                    deposit(amount, bank_card);
+//                    response = "APPROVED";
+//                    send(client_fd, response, strlen(response), 0);
+//                }
+//                else if (tokens[0] == "WITHDRAW") {
+//                    int amount = stoi(tokens[1]);
+//                    withdraw(amount, bank_card);
+//                    response = "APPROVED";
+//                    send(client_fd, response, strlen(response), 0);
+//                }
+//                else if (tokens[0] == "BALANCE") {
+//                    int balance = get_balance(bank_card);
+//                    response = std::to_string(balance).c_str();
+//                    send(client_fd, response, strlen(response), 0);
+//                }
+//            }
+
+
+            // Close client_fd socket
+            close(client_fd);
         }
 
     }

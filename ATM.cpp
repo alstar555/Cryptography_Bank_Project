@@ -1,12 +1,10 @@
 #include <iostream>
 #include <string>
-#include <vector>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <cstring>
-#include "SHA-1.h"
-#include <boost/multiprecision/cpp_int.hpp>
+#include "crypto/SHA-1.h"
 
 // ATM Client Instance
 class ATM {
@@ -29,95 +27,105 @@ private:
     }
 
     void run_client() {
-    // Create socket
-    client = socket(AF_INET, SOCK_STREAM, 0);
-    if (client < 0) {
-        std::cerr << "Error creating socket.\n";
-        exit(1);
+        // Create socket
+        client = socket(AF_INET, SOCK_STREAM, 0);
+        if (client < 0) {
+            std::cerr << "Error creating socket.\n";
+            exit(1);
+        }
+
+        // Address setup
+        struct sockaddr_in server_address;
+        server_address.sin_family = AF_INET;
+        server_address.sin_port = htons(port);
+        server_address.sin_addr.s_addr = INADDR_ANY;
+
+        // Connect to server_fd
+        if (connect(client, (struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
+            std::cerr << "Error connecting to server_fd.\n";
+            exit(1);
+        }
+
+        std::cout << "Connected to server_fd.\n";
+
+        // Start "TLS" negotiation
+
+        // receive DH value from server
+        // verify msg is signed by RSA
+
+        // send "our" DH value to server
+
+        // receive HMAC key
+        // verify msg is signed by RSA
+
+//        // Receive message from server_fd
+//        recvBankMsg();
+//
+//        // Send message to server_fd
+//        sendBankMsg("Message from ATM Client.\n");
+
     }
 
-    // Address setup
-    struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(port);
-    server_address.sin_addr.s_addr = INADDR_ANY;
-
-    // Connect to server
-    if (connect(client, (struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
-        std::cerr << "Error connecting to server.\n";
-        exit(1);
+    int login(const std::string& bank_card, const std::string& pass) {
+        std::string message = "LOGIN " + hash_msg(bank_card) + " " + hash_msg(pass);
+        sendBankMsg(message.c_str());
+        std::string response = recvBankMsg();
+        if (response == "APPROVED") {
+            return 1;
+        }else{
+            return 0;
+        }
     }
 
-    std::cout << "Connected to server.\n";
+    int deposit(const std::string& amount) {
+        std::string message = "DEPOSIT " + amount;
+        sendBankMsg(message.c_str());
+        std::string response = recvBankMsg();
+        if (response == "APPROVED") {
+            std::cout << "Deposit Approved" << std::endl;
+            return 1;
+        }else{
+            std::cerr << "Deposit Not Approved" << std::endl;
+            return 0;
+        }
+    }
 
-    // Receive message from server
-    recvBankMsg();
+    int withdraw(const std::string& amount) {
+        sendBankMsg("WITHDRAW "+amount);
+        std::string response = recvBankMsg();
+        if (response == "APPROVED") {
+            std::cout << "Withdraw Approved" << std::endl;
+            return 1;
+        }else{
+            std::cerr << "Withdraw Not Approved" << std::endl;
+            return 0;
+        }
+    }
 
-    // Send message to server
-    sendBankMsg("Message from ATM Client.\n");
 
-}
+    std::string balance() {
+        sendBankMsg("BALANCE");
+        std::string response = recvBankMsg();
+        return response;
+    }
 
-int login(const std::string& bank_card, const std::string& pass) {
-    std::string message = "LOGIN " + hash_msg(bank_card) + " " + hash_msg(pass);
-    sendBankMsg(message.c_str());
-    std::string response = recvBankMsg();
-    if (response == "APPROVED") {
+    int sendBankMsg (const std::string& msg) {
+        std::string encryptedMsg = encrypt(msg);
+        int bytes_sent = send(client, encryptedMsg.c_str(), encryptedMsg.length(), 0);
+
+        if (bytes_sent == -1) {
+            std::cerr << "Error sending message.\n";
+            return -1;
+        }
         return 1;
-    }else{
-        return 0;
     }
-}
 
-int deposit(const std::string& amount) {
-    std::string message = "DEPOSIT " + amount;
-    sendBankMsg(message.c_str());
-    std::string response = recvBankMsg();
-    if (response == "APPROVED") {
-        std::cout << "Deposit Approved" << std::endl;
-        return 1;
-    }else{
-        std::cerr << "Deposit Not Approved" << std::endl;
-        return 0;
+    std::string recvBankMsg () {
+        char buffer[1024] = {0};
+        recv(client, buffer, sizeof(buffer), 0);
+        std::cout << "Server: " << buffer << std::endl;
+        return std::string(buffer);
     }
-}
-
-int withdraw(const std::string& amount) {
-    sendBankMsg("WITHDRAW "+amount);
-    std::string response = recvBankMsg();
-    if (response == "APPROVED") {
-        std::cout << "Withdraw Approved" << std::endl;
-        return 1;
-    }else{
-        std::cerr << "Withdraw Not Approved" << std::endl;
-        return 0;
-    }
-}
-
-
-std::string balance() {
-    sendBankMsg("BALANCE");
-    std::string response = recvBankMsg();
-    return response;
-}
-
-int sendBankMsg (const std::string& msg) {
-    std::string encryptedMsg = encrypt(msg);
-    int bytes_sent = send(client, encryptedMsg.c_str(), encryptedMsg.length(), 0);
-
-    if (bytes_sent == -1) {
-        std::cerr << "Error sending message.\n";
-        return -1;
-    }
-    return 1;
-}
-
-std::string recvBankMsg () {
-    char buffer[1024] = {0};
-    recv(client, buffer, sizeof(buffer), 0);
-    std::cout << "Server: " << buffer << std::endl;
-    return std::string(buffer);
-}
 
 
    

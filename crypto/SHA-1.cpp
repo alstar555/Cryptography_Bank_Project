@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include "SHA-1.h"
-#include "Utils.h"
+#include "../Utils.h"
 
 std::vector<uint8_t> SHA1::add_padding(const std::string &message) {
     std::vector<uint8_t> bytes(message.begin(), message.end());

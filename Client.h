@@ -1,8 +1,8 @@
 #ifndef CRYPTOGRAPHY_BANK_PROJECT_CLIENT_H
 #define CRYPTOGRAPHY_BANK_PROJECT_CLIENT_H
 
-#include "DH.h"
-#include "DESKey.h"
+#include "crypto/DH.h"
+#include "crypto/DESKey.h"
 
 class Client {
 private:

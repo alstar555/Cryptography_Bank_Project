@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
-#include "Utils.h"
+#include "../Utils.h"
 #include "SHA-1.h"
 #include <boost/multiprecision/cpp_int.hpp>
 

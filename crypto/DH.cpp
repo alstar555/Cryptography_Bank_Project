@@ -1,6 +1,6 @@
 #include "DH.h"
 
-#include "Utils.h"
+#include "../Utils.h"
 #include <boost/multiprecision/cpp_int.hpp>
 //#include <boost/multiprecision/cpp_dec_float.hpp>
 

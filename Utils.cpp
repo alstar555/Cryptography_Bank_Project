@@ -36,3 +36,32 @@ std::string convert_byte_str_to_hex(const std::string& byte_str) {
     }
     return ss.str();
 }
+
+boost::multiprecision::cpp_int int_from_bytes(const std::vector<uint8_t>& bytes) {
+    boost::multiprecision::cpp_int ret;
+    boost::multiprecision::import_bits(ret, bytes.begin(), bytes.end());
+    return ret;
+}
+
+std::vector<uint8_t> bytes_from_int(const boost::multiprecision::cpp_int& cpp_int) {
+    std::vector<uint8_t> ret;
+    boost::multiprecision::export_bits(cpp_int, std::back_inserter(ret), 8);
+    return ret;
+}
+
+boost::multiprecision::cpp_int int_from_longs(const std::vector<unsigned long>& longs) {
+    boost::multiprecision::cpp_int ret;
+    boost::multiprecision::import_bits(ret, longs.begin(), longs.end(), 64);
+    return ret;
+}
+
+std::vector<unsigned long> longs_from_int(const boost::multiprecision::cpp_int& cpp_int) {
+    std::vector<unsigned long> ret;
+    boost::multiprecision::export_bits(cpp_int, std::back_inserter(ret), 64);
+    return ret;
+}
+
+unsigned long random_iv() {
+    auto random_int = get_random_int(8);
+    return random_int.convert_to<unsigned long>();
+}

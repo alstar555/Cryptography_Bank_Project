@@ -8,6 +8,7 @@ class Client {
 private:
     DH diffie_hellman;
     DESKey des_key;
+    std::string hmac_key;
 
 public:
     void build_des_key_from_dh();
@@ -15,6 +16,10 @@ public:
     DH& getDH() { return diffie_hellman; };
 
     const DESKey& getDESKey() const { return des_key; }
+
+    void setHMACKey(std::string key) { hmac_key = key; }
+
+    const std::string& getHMACKey() const { return hmac_key; }
 };
 
 

@@ -357,14 +357,14 @@ unsigned long DES::key_permuted_choice_2(unsigned long input) {
     return ret;
 }
 
-int main() {
-    unsigned long ptxt = 84903248ul;
-    unsigned long key = 1023040812745559411ul;
-
-    unsigned long res = DES::encrypt3(ptxt, key, key, key);
-
-    std::cout << res << std::endl;
-
-    res = DES::decrypt3(res, key, key, key);
-    std::cout << res << std::endl;
-}
+//int main() {
+//    unsigned long ptxt = 84903248ul;
+//    unsigned long key = 1023040812745559411ul;
+//
+//    unsigned long res = DES::encrypt3(ptxt, key, key, key);
+//
+//    std::cout << res << std::endl;
+//
+//    res = DES::decrypt3(res, key, key, key);
+//    std::cout << res << std::endl;
+//}

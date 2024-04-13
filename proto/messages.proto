@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+message ServerHelloContent {
+  bytes diffie_hellman_value = 1;
+}
+
+message ServerHello {
+  bytes inner_msg = 1; // this is really ServerHelloContent
+  bytes signature = 2;
+}
+
+message ClientHello {
+  bytes diffie_hellman_value = 1;
+}
+
+message HMACSend {
+  bytes encrypted_hmac = 1;
+  fixed64 iv = 2;
+}
+
+message UnencryptedMessage {
+  string inner_msg = 1;
+  uint32 seq_num = 2;
+}
+
+message EncryptedMessage {
+  bytes inner_msg = 1; // this is a UnencryptedMessage when decrypted
+  fixed64 iv = 2;
+}
+
+message MACMessage {
+  EncryptedMessage inner_msg = 1;
+  bytes mac = 2;
+}
+

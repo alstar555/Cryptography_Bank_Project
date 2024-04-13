@@ -108,16 +108,16 @@ private:
         return std::make_pair(true, um.inner_msg());
     }
 
-    std::string recvATMMsg() {
-        char buffer[8192] = {0};
-        int len = recv(client_fd, buffer, 8192, 0);
+    // std::string recvATMMsg() {
+    //     char buffer[8192] = {0};
+    //     int len = recv(client_fd, buffer, 8192, 0);
 
-        // verify HMAC
+    //     // verify HMAC
 
-        // decrypt with DES
+    //     // decrypt with DES
 
-        //
-    }
+    //     //
+    // }
 
     void sendATMMsg(const std::string& msg) {
         std::string enc = encrypt_msg(msg);
@@ -136,7 +136,12 @@ private:
     }
 
     void deposit(const int amount, const std::string& bank_card){
-        bank_account_database[bank_card] += amount;
+        if (credentials_database.find(bank_card) == credentials_database.end()){
+            std::cout << "ERROR: Account not found.";
+            exit(1);
+        }else{
+            bank_account_database[bank_card] += amount;
+        }
     }
 
      void withdraw(const int amount, const std::string& bank_card){
@@ -275,6 +280,12 @@ private:
 
             // handle fully encrypted messages from here on our
 
+            std::string bank_card;
+            std::string pin;
+            std::string response;
+            std::string _;
+            int authenticated = 0;
+
             while (true) {
                 // recv a msg
                 char buffer[8192] = {0};
@@ -291,84 +302,42 @@ private:
                 std::cout << "INFO: Received msg " << res.second << std::endl;
 
                 std::string cmd = res.second;
+                std::stringstream ss(cmd);
+                int amount;
 
                 if (cmd.find("LOGIN") == 0) {
-//                    std::cout << "APPROVED" << std::endl;
-                    sendATMMsg("APPROVED");
+                    ss >> _ >> bank_card >> pin;
+                    bank_card = hash_msg(bank_card);
+                    pin = hash_msg(pin);
+                    authenticated = validate_login(bank_card, pin);
+                    if(authenticated){
+                       response = "APPROVED";
+                       std::cout << "Login Successful.\n";
+                    }else{
+                       std::cout << "Login not Approved.\n";
+                       response = "BAD LOGIN";
+                    }
+                    sendATMMsg(response);
                 }
+                else if (cmd.find("DEPOSIT") == 0) {
+                    ss >> _ >> amount;
+                    deposit(amount, bank_card);
+                    response = "APPROVED";
+                    sendATMMsg(response);
+               }
+               else if (cmd.find("WITHDRAW") == 0) {
+                   ss >> _ >> amount;
+                   withdraw(amount, bank_card);
+                   response = "APPROVED";
+                   sendATMMsg(response);
+               }
+               else if (cmd.find("BALANCE") == 0) {
+                   int balance = get_balance(bank_card);
+                   response = std::to_string(balance).c_str();
+                   sendATMMsg(response);
+               }
 
             }
-
-
-
-
-
-
-            // send client_fd
-
-//            // Send message to client_fd
-//            char buffer[1024] = "Message from Bank Server.\n";
-//            send(client_fd, buffer, strlen(buffer), 0);
-
-//            // Receive messages from client_fd
-//            while (true) {
-//                // Read the length of the incoming message
-//                std::string buffer_str = recvATMMsg();
-//
-//                // Check if the client_fd disconnected
-//                if (buffer_str == "") {
-//                    std::cout << "Client disconnected.\n";
-//                    break;
-//                }
-//
-//                // Decrypt request
-//                std::string request = decrypt(buffer_str);
-//
-//                std::cout << "Client: " << request << std::endl;
-//
-//                // Process Client requests
-//                std::istringstream iss(request);
-//                std::vector<std::string> tokens;
-//                std::string token;
-//                while (std::getline(iss, token, ' ')) {
-//                    tokens.push_back(token);
-//                }
-//                const char* response;
-//                int authenticated = 0;
-//                if (tokens[0] == "LOGIN") {
-//                    bank_card = tokens[1];
-//                    std::string pass = tokens[2];
-//                    std::cout << "bank_card: " << bank_card << std::endl;
-//                    std::cout << "pass: " << pass << std::endl;
-//                    authenticated = validate_login(bank_card, pass);
-//                    if(authenticated){
-//                        response = "APPROVED";
-//                        std::cout << "Login Successful.\n";
-//                    }else{
-//                        std::cout << "Login not Approved.\n";
-//                        response = "BAD LOGIN";
-//                    }
-//                    send(client_fd, response, strlen(response), 0);
-//                }
-//                else if (tokens[0] == "DEPOSIT") {
-//                    int amount = stoi(tokens[1]);
-//                    deposit(amount, bank_card);
-//                    response = "APPROVED";
-//                    send(client_fd, response, strlen(response), 0);
-//                }
-//                else if (tokens[0] == "WITHDRAW") {
-//                    int amount = stoi(tokens[1]);
-//                    withdraw(amount, bank_card);
-//                    response = "APPROVED";
-//                    send(client_fd, response, strlen(response), 0);
-//                }
-//                else if (tokens[0] == "BALANCE") {
-//                    int balance = get_balance(bank_card);
-//                    response = std::to_string(balance).c_str();
-//                    send(client_fd, response, strlen(response), 0);
-//                }
-//            }
-
 
             // Close client_fd socket
             close(client_fd);

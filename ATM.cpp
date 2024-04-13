@@ -377,11 +377,11 @@ public:
                     break;
                 case 3:
                     amount = balance();
-                    std::cout << "Your Current Balance is: $" << amount << std::endl;
+                    std::cout << "\nYour Current Balance is: $" << amount << std::endl;
                     break;
                 case 4:
                     std::cout << "Exiting ATM.\n" << std::endl;
-                    break;
+                    exit(1);
                 default:
                     std::cout << "Invalid choice, please try again.\n" << std::endl;
             }

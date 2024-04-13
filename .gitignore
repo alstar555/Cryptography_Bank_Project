@@ -1,3 +1,5 @@
 cmake-build-debug
 .idea
 build
+proto/messages.pb.cc
+proto/messages.pb.h

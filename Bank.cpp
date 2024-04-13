@@ -241,8 +241,10 @@ private:
                 continue;
             }
 
+            std::vector<uint8_t> bytes(ch.diffie_hellman_value().begin(), ch.diffie_hellman_value().end());
+
             boost::multiprecision::cpp_int imported_dh_value;
-            boost::multiprecision::import_bits(imported_dh_value, ch.diffie_hellman_value().begin(), ch.diffie_hellman_value().end());
+            boost::multiprecision::import_bits(imported_dh_value, bytes.begin(), bytes.end());
 
             client.getDH().build_shared_secret(imported_dh_value);
             client.build_des_key_from_dh();

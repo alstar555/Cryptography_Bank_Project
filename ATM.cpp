@@ -142,8 +142,10 @@ private:
             return;
         }
 
+        std::vector<uint8_t> sig_bytes(sh.signature().begin(), sh.signature().end());
+
         boost::multiprecision::cpp_int signature;
-        boost::multiprecision::import_bits(signature, sh.signature().begin(), sh.signature().end());
+        boost::multiprecision::import_bits(signature, sig_bytes.begin(), sig_bytes.end());
 
         boost::multiprecision::cpp_int val;
         boost::multiprecision::import_bits(val, sh.inner_msg().begin(), sh.inner_msg().end());
@@ -159,8 +161,10 @@ private:
         ServerHelloContent shc;
         shc.ParseFromString(sh.inner_msg());
 
+        std::vector<uint8_t> dh_val_bytes(shc.diffie_hellman_value().begin(), shc.diffie_hellman_value().end());
+
         boost::multiprecision::cpp_int imported_dh_value;
-        boost::multiprecision::import_bits(imported_dh_value, shc.diffie_hellman_value().begin(), shc.diffie_hellman_value().end());
+        boost::multiprecision::import_bits(imported_dh_value, dh_val_bytes.begin(), dh_val_bytes.end());
 
         diffie_hellman.build_shared_secret(imported_dh_value);
 

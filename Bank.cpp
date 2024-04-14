@@ -144,9 +144,13 @@ private:
         }else{
             if(bank_account_database[bank_card] + amount >= BANK_LIMIT){
                 bank_account_database[bank_card] = BANK_LIMIT;
-                std::cerr << "ERROR: Bank's balance limit reached.";
+                std::cerr << "ERROR: Bank's balance limit reached.\n";
                 return -3;
-            }else{
+            }else if (amount <= 0){
+                std::cerr << "ERROR: Invalid Amount.\n";
+                return -2;
+            }
+            else{
                 bank_account_database[bank_card] += amount;
                 return 1;
             }
@@ -154,16 +158,30 @@ private:
         return 0;
     }
 
-     bool withdraw(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
-        if (bank_account_database[bank_card] > amount) {
+     int withdraw(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
+        if (bank_account_database[bank_card] >= amount) {
+            if (amount <= 0){
+                std::cerr << "ERROR: Invalid Amount.\n";
+                return -2;
+            }
             bank_account_database[bank_card] -= amount;
-            return true;
+            return 1;
+        }else if (bank_account_database[bank_card] < amount){
+            std::cerr << "ERROR: Deposite More Funds.\n";
+                return -3;
+
         }
-        return false;
+        return 0;
     }
 
      boost::multiprecision::cpp_int get_balance(const std::string& bank_card){
-        return bank_account_database[bank_card] ;
+        if(bank_account_database[bank_card] < 0){
+            bank_account_database[bank_card] = 0;
+        }
+        else if(bank_account_database[bank_card] > BANK_LIMIT){
+            bank_account_database[bank_card] = BANK_LIMIT;
+        }
+        return bank_account_database[bank_card];
     }
 
     std::string hash_msg(const std::string& msg) {
@@ -307,6 +325,7 @@ private:
 
                 auto res = decrypt_msg(buffer, len);
 
+
                 if (!res.first) {
                     std::cerr << "Failed to receive message from ATM. Aborting connection..." << std::endl;
                     std::cerr << res.second << std::endl;
@@ -333,31 +352,40 @@ private:
                     }
                     sendATMMsg(response);
                 }
-                else if (cmd.find("DEPOSIT") == 0) {
-                    ss >> _ >> amount;
-                    int status = deposit(amount, bank_card);
-                    if (status==1){
-                        response = "APPROVED";
-                    }else if(status==-3){
-                        response = "LIMIT";
-                    }
-                    sendATMMsg(response);
-               }
-               else if (cmd.find("WITHDRAW") == 0) {
-                   ss >> _ >> amount;
-                   if (withdraw(amount, bank_card)) {
-                       response = "APPROVED";
+                if (authenticated){
+                    if (cmd.find("DEPOSIT") == 0) {
+                        ss >> _ >> amount;
+                        int status = deposit(amount, bank_card);
+                        if (status==1){
+                            response = "APPROVED";
+                        }else if(status==-3){
+                            response = "LIMIT";
+                        }else if(status==-2){
+                            response = "INVALID";
+                        }
+                        sendATMMsg(response);
                    }
-                   else {
-                       response = "REJECTED";
+                   else if (cmd.find("WITHDRAW") == 0) {
+                       ss >> _ >> amount;
+                       int status = withdraw(amount, bank_card);
+                       std::cout << "status: " << status << std::endl;
+                       if (status == 1) {
+                           response = "APPROVED";
+                       }else if(status==-2){
+                            response = "INVALID";
+                       }else if(status==-3){
+                            response = "INSUFFICIENT";
+                       }else {
+                           response = "REJECTED";
+                       }
+                       sendATMMsg(response);
                    }
-                   sendATMMsg(response);
-               }
-               else if (cmd.find("BALANCE") == 0) {
-                   boost::multiprecision::cpp_int balance = get_balance(bank_card);
-                   response =  boost::lexical_cast<std::string>(balance);
-                   sendATMMsg(response);
-               }
+                   else if (cmd.find("BALANCE") == 0) {
+                       boost::multiprecision::cpp_int balance = get_balance(bank_card);
+                       response =  boost::lexical_cast<std::string>(balance);
+                       sendATMMsg(response);
+                   }
+                }
 
             }
 

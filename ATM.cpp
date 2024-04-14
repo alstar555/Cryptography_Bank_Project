@@ -261,8 +261,10 @@ private:
         }else if (response == "LIMIT") {
             std::cout << "Bank's balance limit reached" << std::endl;
             return 0;
-        }
-        else{
+        }else if (response == "INVALID") {
+            std::cout << "Invalid Amount" << std::endl;
+            return 0;
+        }else{
             std::cerr << "Deposit Not Approved" << std::endl;
             return 0;
         }
@@ -274,6 +276,12 @@ private:
         if (response == "APPROVED") {
             std::cout << "Withdraw Approved" << std::endl;
             return 1;
+        }else if (response == "INVALID") {
+            std::cout << "Invalid Amount" << std::endl;
+            return 0;
+        }else if (response == "INSUFFICIENT") {
+            std::cout << "Indufficient Funds" << std::endl;
+            return 0;
         }else{
             std::cerr << "Withdraw Not Approved" << std::endl;
             return 0;

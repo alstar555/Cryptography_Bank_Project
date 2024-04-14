@@ -1,6 +1,8 @@
 #include "DES.h"
 #include <iostream>
 
+// implementation details from https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf
+
 unsigned long DES::encrypt(unsigned long plaintext, unsigned long key) {
     unsigned long tmp = initial_perm(plaintext);
 

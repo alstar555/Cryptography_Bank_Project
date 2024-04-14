@@ -14,15 +14,20 @@
 
 ### How to Build
 
-1. Make a build directory: `mkdir build`
-2. Run: `cmake -S . -B build`
-3. Run: `cd build`
-4. Run: `make`
-5. You should now have an ATM and Bank executable in the build directory
+Start from project root directory
+
+1. Run: `cd proto`
+2. Run: `protoc -I=. --cpp_out=. messages.proto`
+3. Run: `cd ..`
+4. Make a build directory: `mkdir build`
+5. Run: `cmake -S . -B build`
+6. Run: `cd build`
+7. Run: `make`
+8. You should now have an ATM and Bank executable in the build directory
 
 ### How to Run
 
-1. Be in the project root directory (not in build)
+1. Be in the project root directory (not in build otherwise it won't work)
 2. Run `./build/Bank 1500` to start the Bank (must be started first)
 3. Run `./build/ATM 1500` to start the Bank
 

@@ -146,8 +146,12 @@ private:
         }
     }
 
-     void withdraw(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
-        bank_account_database[bank_card] -= amount;
+     bool withdraw(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
+        if (bank_account_database[bank_card] > amount) {
+            bank_account_database[bank_card] -= amount;
+            return true;
+        }
+        return false;
     }
 
      boost::multiprecision::cpp_int get_balance(const std::string& bank_card){
@@ -329,8 +333,12 @@ private:
                }
                else if (cmd.find("WITHDRAW") == 0) {
                    ss >> _ >> amount;
-                   withdraw(amount, bank_card);
-                   response = "APPROVED";
+                   if (withdraw(amount, bank_card)) {
+                       response = "APPROVED";
+                   }
+                   else {
+                       response = "REJECTED";
+                   }
                    sendATMMsg(response);
                }
                else if (cmd.find("BALANCE") == 0) {

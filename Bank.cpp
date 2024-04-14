@@ -15,12 +15,14 @@
 #include "Utils.h"
 #include "crypto/DES.h"
 #include "crypto/HMAC.h"
+#include <boost/lexical_cast.hpp>
+
 
 // Bank Server Instance
 class Bank {
 private:
     std::map<std::string, std::string> credentials_database; //stores bank card and pin
-    std::map<std::string, int> bank_account_database; //stores account balance of users
+    std::map<std::string, boost::multiprecision::cpp_int> bank_account_database; //stores account balance of users
     std::map<int, Client> fd_clients;
 
     int server_fd;
@@ -135,7 +137,7 @@ private:
         return 0;
     }
 
-    void deposit(const int amount, const std::string& bank_card){
+    void deposit(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
         if (credentials_database.find(bank_card) == credentials_database.end()){
             std::cout << "ERROR: Account not found.";
             exit(1);
@@ -144,11 +146,11 @@ private:
         }
     }
 
-     void withdraw(const int amount, const std::string& bank_card){
+     void withdraw(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
         bank_account_database[bank_card] -= amount;
     }
 
-     int get_balance(const std::string& bank_card){
+     boost::multiprecision::cpp_int get_balance(const std::string& bank_card){
         return bank_account_database[bank_card] ;
     }
 
@@ -303,7 +305,7 @@ private:
 
                 std::string cmd = res.second;
                 std::stringstream ss(cmd);
-                int amount;
+                boost::multiprecision::cpp_int amount;
 
                 if (cmd.find("LOGIN") == 0) {
                     ss >> _ >> bank_card >> pin;
@@ -332,8 +334,8 @@ private:
                    sendATMMsg(response);
                }
                else if (cmd.find("BALANCE") == 0) {
-                   int balance = get_balance(bank_card);
-                   response = std::to_string(balance).c_str();
+                   boost::multiprecision::cpp_int balance = get_balance(bank_card);
+                   response =  boost::lexical_cast<std::string>(balance);
                    sendATMMsg(response);
                }
 

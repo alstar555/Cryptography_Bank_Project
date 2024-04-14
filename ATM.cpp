@@ -258,7 +258,11 @@ private:
         if (response == "APPROVED") {
             std::cout << "Deposit Approved" << std::endl;
             return 1;
-        }else{
+        }else if (response == "LIMIT") {
+            std::cout << "Bank's balance limit reached" << std::endl;
+            return 0;
+        }
+        else{
             std::cerr << "Deposit Not Approved" << std::endl;
             return 0;
         }

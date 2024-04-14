@@ -21,6 +21,7 @@
 // Bank Server Instance
 class Bank {
 private:
+    boost::multiprecision::cpp_int BANK_LIMIT = pow(boost::multiprecision::cpp_int(10), 100);;
     std::map<std::string, std::string> credentials_database; //stores bank card and pin
     std::map<std::string, boost::multiprecision::cpp_int> bank_account_database; //stores account balance of users
     std::map<int, Client> fd_clients;
@@ -137,13 +138,20 @@ private:
         return 0;
     }
 
-    void deposit(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
+    int deposit(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
         if (credentials_database.find(bank_card) == credentials_database.end()){
-            std::cout << "ERROR: Account not found.";
-            exit(1);
+            std::cerr << "ERROR: Account not found.";
         }else{
-            bank_account_database[bank_card] += amount;
+            if(bank_account_database[bank_card] + amount >= BANK_LIMIT){
+                bank_account_database[bank_card] = BANK_LIMIT;
+                std::cerr << "ERROR: Bank's balance limit reached.";
+                return -3;
+            }else{
+                bank_account_database[bank_card] += amount;
+                return 1;
+            }
         }
+        return 0;
     }
 
      bool withdraw(const boost::multiprecision::cpp_int amount, const std::string& bank_card){
@@ -327,8 +335,12 @@ private:
                 }
                 else if (cmd.find("DEPOSIT") == 0) {
                     ss >> _ >> amount;
-                    deposit(amount, bank_card);
-                    response = "APPROVED";
+                    int status = deposit(amount, bank_card);
+                    if (status==1){
+                        response = "APPROVED";
+                    }else if(status==-3){
+                        response = "LIMIT";
+                    }
                     sendATMMsg(response);
                }
                else if (cmd.find("WITHDRAW") == 0) {

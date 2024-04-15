@@ -104,12 +104,6 @@ std::string SHA1::operator()(const std::string &message) {
 
     }
 
-//    // Concatenate the hashed blocks into 160-bit number
-//    std::stringstream ss;
-//    std::string HH;
-//    ss <<std::hex<<H0<<H1<<H2<<H3<<H4;
-//    ss>>HH;
-
     std::string HH;
     for (int i = 0; i < 4; i++) {
         HH.push_back((uint8_t)((H0 >> (8*(3-i))) & ((1 << 8) - 1)));

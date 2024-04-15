@@ -288,7 +288,6 @@ private:
         char buffer[8192] = {0};
         int len = recv(client, buffer, sizeof(buffer), 0);
         auto msg = decrypt_msg(buffer, len);
-//        std::cout << "Server: " << msg.second << std::endl;
         return std::string(msg.second);
     }
 

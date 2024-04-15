@@ -36,9 +36,3 @@ std::string HMAC::resize_key(const std::string &key) {
     }
     return key;
 }
-
-//int main() {
-//    HMAC hmac;
-//    std::cout << hmac("key", "Hello Bro") << std::endl;
-//    return 0;
-//}

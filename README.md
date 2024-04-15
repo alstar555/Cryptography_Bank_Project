@@ -5,6 +5,7 @@
 * Boost
 * Protobuf
 * CMake
+* C++ Compiler (g++)
 
 ### System Tested On
 
@@ -17,6 +18,7 @@ functionality on anything else.
 1. `sudo apt install cmake`
 2. `sudo apt install libboost-all-dev`
 3. `sudo apt install protobuf-compiler` (this should install relevant library needed)
+4. `sudo apt install g++`
 
 ### How to Build
 

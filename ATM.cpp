@@ -20,7 +20,7 @@
 class ATM {
 private:
 
-    int port = 1501;
+    int port = 1500;
     std::string ip = "127.0.0.1";
     int client;
 
@@ -29,7 +29,6 @@ private:
     std::string hmac_key;
     HMAC hmac;
     unsigned int seq_num;
-
 
     std::string encrypt_msg(const std::string& msg) {
         seq_num++; // must increase
@@ -104,7 +103,7 @@ private:
         return sha1(msg);
     }
 
-    void run_client() {
+    void start_connection() {
         // Create socket
         client = socket(AF_INET, SOCK_STREAM, 0);
         if (client < 0) {
@@ -195,8 +194,6 @@ private:
         unsigned long key3 = tmp.convert_to<unsigned long>();
         des_key = DESKey(key1, key2, key3);
 
-//        std::cout << diffie_hellman.get_shared_secret() << std::endl;
-
         std::fill_n(buffer, 8192, 0);
         len = recv(client, buffer, sizeof(buffer), 0);
 
@@ -219,25 +216,6 @@ private:
                 );
 
         hmac_key = std::string((char*)decrypted_bytes.data(), decrypted_bytes.size());
-
-//        while (true) {
-//            std::string cmd;
-//            std::getline(std::cin, cmd);
-//
-//            // send command to bank
-//            sendBankMsg(cmd);
-//        }
-
-
-        // receive HMAC key
-        // verify msg is signed by RSA
-
-//        // Receive message from server_fd
-//        recvBankMsg();
-//
-//        // Send message to server_fd
-//        sendBankMsg("Message from ATM Client.\n");
-
     }
 
     int login(const std::string& bank_card, const std::string& pass) {
@@ -341,7 +319,7 @@ public:
 
     void run() {
 
-        run_client();
+        start_connection();
         
 
         std::string bankCardNumber, pin;

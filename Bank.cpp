@@ -28,7 +28,7 @@ private:
 
     int server_fd;
     int client_fd;
-    int port = 1501;
+    int port = 1500;
     Client client;
     RSAPrivateKey private_key;
     HMAC hmac;
@@ -100,17 +100,6 @@ private:
 
         return std::make_pair(true, um.inner_msg());
     }
-
-    // std::string recvATMMsg() {
-    //     char buffer[8192] = {0};
-    //     int len = recv(client_fd, buffer, 8192, 0);
-
-    //     // verify HMAC
-
-    //     // decrypt with DES
-
-    //     //
-    // }
 
     void sendATMMsg(const std::string& msg) {
         std::string enc = encrypt_msg(msg);

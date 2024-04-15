@@ -6,6 +6,12 @@
 * Protobuf
 * CMake
 
+### System Tested On
+
+This project was tested on Ubuntu 22.04 which we confirmed it worked.
+We have not tested on other systems so cannot guarantee its
+functionality on anything else.
+
 ### How to Install Requirements (on Ubuntu)
 
 1. `sudo apt install cmake`

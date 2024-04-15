@@ -70,16 +70,6 @@ private:
             return std::make_pair(false, "1");
         }
 
-//        SHA1 sha;
-
-//        SHA1 sha;
-//
-//        std::cout << sha.hex_rep(mm.inner_msg().SerializeAsString()) << std::endl;
-//
-//        std::cout << convert_byte_str_to_hex(hmac(client.getHMACKey(), mm.inner_msg().SerializeAsString())) << std::endl;
-//
-//        std::cout << convert_byte_str_to_hex(mm.mac()) << std::endl;
-
         if (hmac(client.getHMACKey(), mm.inner_msg().SerializeAsString()) != mm.mac()) {
             return std::make_pair(false, "2");
         }
@@ -230,6 +220,7 @@ private:
             client = Client();
 
             // Start "TLS" negotiation
+            seq_num = 0;
 
             // send DH value signed by RSA key
             ServerHelloContent shc;
@@ -266,7 +257,6 @@ private:
             std::cout << "INFO: Sent ServerHello to ATM" << std::endl;
 
             // receive DH value by other end and compute shared secret
-
             char buffer[8192] = {0};
             int len = recv(client_fd, buffer, sizeof(buffer), 0);
 
@@ -288,8 +278,7 @@ private:
 
             std::cout << "INFO: Successfully received ClientHello from ATM" << std::endl;
 
-            // send DES encrypted message containing an HMAC key to use (sign this message too with RSA)
-//            std::cout << client.getDH().get_shared_secret() << std::endl;
+            // send DES encrypted message containing an HMAC key to use
             HMACSend hs;
             auto random_bytes = get_random_bytes(20);
             auto hmac_key = std::string((char*) random_bytes.data(), random_bytes.size());
@@ -311,7 +300,6 @@ private:
             send(client_fd, msg.data(), msg.size(), 0);
 
             // handle fully encrypted messages from here on our
-
             std::string bank_card;
             std::string pin;
             std::string response;
@@ -322,6 +310,12 @@ private:
                 // recv a msg
                 char buffer[8192] = {0};
                 int len = recv(client_fd, buffer, 8192, 0);
+
+                if (len == 0) {
+                    // this means the client terminated the connection
+                    std::cout << "Client disconnected" << std::endl;
+                    break;
+                }
 
                 auto res = decrypt_msg(buffer, len);
 
